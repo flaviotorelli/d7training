@@ -137,6 +137,58 @@ function mymetatags_block_view($delta = '') {
 }
 
 /**
+ * Implements hook_form_alter().
+ */
+function mymetatags_form_alter(&$form, &$form_state, $form_id) {
+
+  switch ($form_id) {
+    case "mymetatags_set_metatags":
+      $form['#validate'][] = '_mymetatags_custom_config_validate';
+      $form['#submit'][] = '_mymetatags_custom_config_submit';
+      break;
+  }
+
+}
+
+/**
+ * Custom validation for metatag config
+ */
+function _mymetatags_custom_config_validate($form, $form_state) {
+
+  $value = check_plain($form_state['values']['metatags_set']);
+
+  // how many lines has the user entered?
+  $lines = explode("\n", $value);
+
+  // the field was set as required, therefore I do not need to check if is empty
+  $x = 0;
+  foreach ($lines as $line) {
+    $x = $x + 1;
+    if ( !_mymetatags_correct_format($line) ) {
+      form_set_error('metatags_set', t("Please, check the line $x. You must split the key and description using a pipe."));
+    }
+  }
+
+}
+
+/**
+ * Checks if the user has entered the correct pattern to the metatag configuration
+ */ 
+function _mymetatags_correct_format($str) {
+  $key_value = explode("|", $str);
+  if (count($key_value) == 2) {
+    return TRUE;
+  }
+  return FALSE;
+}
+
+/**
+ * Custom submit for metatag config
+ */
+function _mymetatags_custom_config_submit($form, $form_state) {
+}
+
+/**
  * Implements hook_mymetatags_list().
  */
 function mymetatags_mymetatags_list() {
@@ -154,8 +206,6 @@ function mymetatags_mymetatags_list() {
   }
 
   return;
-
-  //return array('keywords' => 'Keywords', 'description' => 'Descriptions');
 
 }
 
