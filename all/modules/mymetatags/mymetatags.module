@@ -11,7 +11,6 @@
 function mymetatags_map_load($id) {
 
   $sql = db_select('mymetatags', 'm')->fields('m')->condition('mtid', $id)->execute()->fetchObject();
-
   return $sql;
 
 }
@@ -179,18 +178,8 @@ function _mymetatags_correct_format($str) {
  */
 function _mymetatags_custom_config_submit($form, $form_state) {
 
-  //TO DO: incluir iterações em functions separadas e fazer uso de array_diff 
-
-  $current_database_value = variable_get('metatags_set', '');
-
-  $metatags = explode("\n", $current_database_value);
-  $key_values = array();
-
-  // getting the current metatag_set
-  foreach ($metatags as $metatag) {
-    $x = explode("|", $metatag);
-    $key_values[$x[0]] = $x[1];
-  }
+  //current metatags_list
+  $key_values = module_invoke_all('mymetatags_list');
 
   // submitted values
   $lines_entered = explode("\n", $form_state['values']['metatags_set']);
@@ -204,15 +193,14 @@ function _mymetatags_custom_config_submit($form, $form_state) {
   $excluded_keys = array();
   foreach ($key_values as $key => $value) {
     if (!array_key_exists($key, $key_values_submitted)) {
-      $excluded_keys[] = $key;
+      $excluded_keys[] = $key; 
     }
   }
 
   // search for keys already stored in mymetatags
   $metas = db_query("SELECT mtid, data FROM {mymetatags}");
   $count_metas = $metas->rowCount();
-  $new_data = array();
-
+  
   if ($count_metas > 0) {
     foreach ($metas as $meta) {
       $data = unserialize($meta->data);
