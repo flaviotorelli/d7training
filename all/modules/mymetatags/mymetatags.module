@@ -100,9 +100,6 @@ function mymetatags_menu() {
     'file' => 'mymetatags.pages.inc',
   );
 
-
-  
-
   return $items;
 
 }
@@ -144,7 +141,21 @@ function mymetatags_block_view($delta = '') {
  */
 function mymetatags_mymetatags_list() {
 
-  return array('keywords' => 'Keywords', 'description' => 'Descriptions');
+  $metatags_set = explode("\n", variable_get('metatags_set'));
+  $keys = array();
+
+  if (count($metatags_set) > 0) {
+    foreach ($metatags_set as $meta) {
+      $m = explode('|', $meta);
+      $keys[$m[0]] = t($m[1]);
+    }
+  
+    return $keys;
+  }
+
+  return;
+
+  //return array('keywords' => 'Keywords', 'description' => 'Descriptions');
 
 }
 
