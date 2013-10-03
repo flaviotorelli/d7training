@@ -39,3 +39,11 @@ function mymetatags_schema() {
 
   return $schema;
 }
+
+function mymetatags_install() {
+  variable_set('metatags_set', 'description|Meta tag description');
+}
+
+function mymetatags_uninstall() {
+  variable_del('metatags_set');
+}
