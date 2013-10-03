@@ -252,6 +252,7 @@ function mymetatags_mymetatags_list() {
 
 /**
  * Implements hook_preprocess_html().
+ * Display the meta tag
  */
 function mymetatags_preprocess_html($variables) {
 
@@ -311,6 +312,7 @@ function mymetatags_mymetatags_map() {
 
 /**
  * Meta tags insert form (block).
+ * Ajax form
  */
 
 function mymetatags_insert_form() {
@@ -354,7 +356,6 @@ function mymetatags_insert_form() {
   $form['update_button'] = array(
     '#type' => 'submit',
     '#value' => t('Save'),
-    //'#submit' => array('mymetatags_insert_js_form_submit'),
     '#ajax' => array(
       'callback' => 'mymetatags_ajax_test',
       'wrapper' => 'ajax',
@@ -389,7 +390,7 @@ function mymetatags_ajax_test($form, $form_state) {
 
   }
 
-  // insert metatags in case the node has no one set
+  // insert metatags in case of the node has no one set
   if ($count == 0 && count($data) > 0) {
     // insert a new one
     db_insert('mymetatags')
