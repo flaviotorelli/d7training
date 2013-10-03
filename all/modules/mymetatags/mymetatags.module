@@ -144,7 +144,8 @@ function mymetatags_form_alter(&$form, &$form_state, $form_id) {
   switch ($form_id) {
     case "mymetatags_set_metatags":
       $form['#validate'][] = '_mymetatags_custom_config_validate';
-      $form['#submit'][] = '_mymetatags_custom_config_submit';
+      array_unshift($form['#submit'], '_mymetatags_custom_config_submit');
+      //print '<pre>';print_r($form);
       break;
   }
 
@@ -166,6 +167,8 @@ function _mymetatags_custom_config_validate($form, $form_state) {
     $x = $x + 1;
     if ( !_mymetatags_correct_format($line) ) {
       form_set_error('metatags_set', t("Please, check the line $x. You must split the key and description using a pipe."));
+      // ok, I do know if I have more than one line error, the system will display the error related to the first error found only
+      // In a real project I promess perform it better ;)
     }
   }
 
@@ -186,6 +189,55 @@ function _mymetatags_correct_format($str) {
  * Custom submit for metatag config
  */
 function _mymetatags_custom_config_submit($form, $form_state) {
+
+  //TO DO: incluir iterações em functions separadas e fazer uso de array_diff 
+
+  $current_database_value = variable_get('metatags_set', '');
+
+  $metatags = explode("\n", $current_database_value);
+  $key_values = array();
+
+  // getting the current metatag_set
+  foreach ($metatags as $metatag) {
+    $x = explode("|", $metatag);
+    $key_values[$x[0]] = $x[1];
+  }
+
+  // submitted values
+  $lines_entered = explode("\n", $form_state['values']['metatags_set']);
+  $key_values_submitted = array();
+  foreach ($lines_entered as $line_entered) {
+    $y = explode("|", $line_entered);
+    $key_values_submitted[$y[0]] = $y[1];
+  }
+
+  // does any key was deleted?
+  $excluded_keys = array();
+  foreach ($key_values as $key => $value) {
+    if (!array_key_exists($key, $key_values_submitted)) {
+      $excluded_keys[] = $key;
+    }
+  }
+
+  // search for keys already stored in mymetatags
+  $metas = db_query("SELECT mtid, data FROM {mymetatags}");
+  $count_metas = $metas->rowCount();
+  $new_data = array();
+
+  if ($count_metas > 0) {
+    foreach ($metas as $meta) {
+      $data = unserialize($meta->data);
+      foreach ($data as $key => $value) {
+        if (in_array($key, $excluded_keys)) {
+          unset($data[$key]);
+        }
+      }
+
+      db_update('mymetatags')->fields(array('data' => serialize($data)))->condition('mtid', $meta->mtid)->execute();
+
+    }
+  }
+
 }
 
 /**
