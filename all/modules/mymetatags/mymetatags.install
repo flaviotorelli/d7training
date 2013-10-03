@@ -1,0 +1,41 @@
+<?php
+
+/**
+ * @file
+ *   mymetatags module install
+ */
+
+/**
+ * Implements hook_schema().
+ */
+function mymetatags_schema() {
+  $schema = array();
+
+  $schema['mymetatags'] = array(
+    'description' => 'Table for storing meta tags drupal training.',
+    'fields' => array(
+      'mtid' => array(
+        'description' => 'The unique meta tag id.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'data' => array(
+        'description' => 'Data content',
+        'type' => 'text',
+        'not null' => TRUE,
+        'size' => 'big'
+      ),
+      'normal_path' => array(
+        'description' => 'Normal path',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('mtid'),
+    'unique keys' => array('normal_path' => array('normal_path')), 
+  );
+
+  return $schema;
+}
