@@ -247,5 +247,5 @@ function mymetatags_insert_form() {
 }
 
 function mymetatags_ajax_test($form, $form_state) {
-  return '<div id="ajax">ok</div>';
+  return '<div id="ajax">ajax working!</div>';
 }
