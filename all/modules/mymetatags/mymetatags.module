@@ -91,6 +91,18 @@ function mymetatags_menu() {
     'file' => 'mymetatags.pages.inc',
   );
 
+  $items['admin/config/search/mymetatags/configure'] = array(
+    'title' => 'Set the meta tags available in your site',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mymetatags_set_metatags', 4),
+    'access arguments' => array('manage page metatags'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'mymetatags.pages.inc',
+  );
+
+
+  
+
   return $items;
 
 }

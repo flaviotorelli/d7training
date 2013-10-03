@@ -177,3 +177,19 @@ function mymetatags_update_form_save_submit($form, &$form_state) {
   }
 
 }
+
+
+// settings form
+function mymetatags_set_metatags() {
+  $form = array();
+
+  $form['metatags_set'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Define available metatags'),
+    '#default_value' => variable_get('metatags_set', ''),
+    '#description' => t('Example: keywords|Keywords meta tags. 1 per line.'),
+    '#required' => TRUE,
+  );
+
+  return system_settings_form($form);
+}
