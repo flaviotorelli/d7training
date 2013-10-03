@@ -196,14 +196,14 @@ function mymetatags_mymetatags_map() {
 
 
 /**
- * Meta tags insert form.
+ * Meta tags insert form (block).
  */
 
 function mymetatags_insert_form() {
 
   $form = array();
   $form['ajax'] = array(
-    '#markup' => '<div id="ajax">status msg</div>',
+    '#markup' => '<div id="ajax"></div>',
   );
 
   $q = check_plain($_GET['q']);
@@ -218,13 +218,19 @@ function mymetatags_insert_form() {
   $data = unserialize($get_metatags);
 
   foreach ($available_metatags as $key => $value) {
-    $form['metatag_'. $key] = array(
+    $form['meta_tag_'. $key] = array(
       '#type' => 'textfield',
       '#title' => $key,
       '#default_value' => (!empty($data[$key]))?$data[$key]:'',
       '#description' => (empty($data[$key]))?'Insert '.$key:'Update '.$key 
     );
+     $validate_keys[] = $key;
   }
+
+  $form['validate_keys'] = array(
+    '#type' => 'value',
+    '#value' => implode('#', $validate_keys)
+  );
 
   $form['normal_path'] = array(
     '#type' => 'value',
@@ -247,5 +253,61 @@ function mymetatags_insert_form() {
 }
 
 function mymetatags_ajax_test($form, $form_state) {
-  return '<div id="ajax">ajax working!</div>';
+
+  $normal_path = $form_state['values']['normal_path'];
+
+  // checks if the node has some metatag set
+  $metatags = db_query("SELECT mtid FROM {mymetatags} WHERE normal_path = :normal_path",
+    array(':normal_path' => $normal_path));
+  $count = $metatags->rowCount();
+
+  // checking the fields that must be validated
+  $validate_fields = explode('#', $form_state['values']['validate_keys']);
+  $update_fields = array();
+  $data = array();
+
+  foreach ($validate_fields as $validate_field) {
+
+    if (check_plain($form_state['values']['meta_tag_'. $validate_field]) != '') {
+      $update_fields[] = $form_state['values']['meta_tag_'.$validate_field];
+      $data[$validate_field] = $form_state['values']['meta_tag_'.$validate_field];
+    }
+
+  }
+
+  // insert metatags in case the node has no one set
+  if ($count == 0 && count($data) > 0) {
+    // insert a new one
+    db_insert('mymetatags')
+      ->fields(array(
+          'normal_path' => $normal_path,
+          'data' => serialize($data),
+        ))
+        ->execute();
+
+      return t('The metatags has been set');
+  }
+
+  // remove the register if all fields are empty
+  if (count($update_fields) == 0) {
+    // remove register
+    db_delete('mymetatags')
+          ->condition('normal_path', $form_state['values']['normal_path'])
+          ->execute();
+
+      return t('Meta tags deleted');
+   }
+  else {
+
+    db_update('mymetatags')
+      ->fields(array('data' => serialize($data)))
+      ->condition('normal_path', $form_state['values']['normal_path'])
+      ->execute();
+
+      return t('Meta tags updated');
+
+  }
+
+
 }
+
