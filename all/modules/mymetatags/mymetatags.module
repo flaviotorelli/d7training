@@ -71,16 +71,6 @@ function mymetatags_menu() {
     'type' => MENU_LOCAL_TASK,
     'file' => $file_pages_src,
   );
-  
-  /*$items['admin/config/search/mymetatags/%mymetatags_map'] = array(
-    'title' => 'Meta tag details',
-    'page callback' => '_mymetatags_more_info',
-    'page arguments' => array(4),
-    'access arguments' => array('manage page metatags'),
-    'type' => MENU_CALLBACK,
-    'file' => $file_pages_src,
-   // 'access callback' => TRUE
-  );*/
 
   $items['admin/config/search/mymetatags/%mymetatags_map'] = array(
     'title' => 'My Meta Tags',
@@ -145,7 +135,6 @@ function mymetatags_form_alter(&$form, &$form_state, $form_id) {
     case "mymetatags_set_metatags":
       $form['#validate'][] = '_mymetatags_custom_config_validate';
       array_unshift($form['#submit'], '_mymetatags_custom_config_submit');
-      //print '<pre>';print_r($form);
       break;
   }
 
