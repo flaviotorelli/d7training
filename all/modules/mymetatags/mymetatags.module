@@ -77,7 +77,7 @@ function mymetatags_menu() {
     'page arguments' => array('mymetatags_update_form', 4),
     'access arguments' => array('manage page metatags'),
     'type' => MENU_CALLBACK,
-    'file' => 'mymetatags.pages.inc',
+    'file' => $file_pages_src,
   );
 
   $items['admin/config/search/mymetatags/configure'] = array(
@@ -86,7 +86,7 @@ function mymetatags_menu() {
     'page arguments' => array('mymetatags_set_metatags', 4),
     'access arguments' => array('manage page metatags'),
     'type' => MENU_NORMAL_ITEM,
-    'file' => 'mymetatags.pages.inc',
+    'file' => $file_pages_src,
   );
 
   $items['admin/config/search/mymetatags/%mymetatags_map/delete'] = array(
@@ -95,7 +95,7 @@ function mymetatags_menu() {
     'page arguments' => array('mymetatags_exclude_form', 4),
     'access arguments' => array('manage page metatags'),
     'type' => MENU_CALLBACK,
-    'file' => 'mymetatags.pages.inc',
+    'file' => $file_pages_src,
   );
 
   return $items;
