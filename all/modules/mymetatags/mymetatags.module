@@ -89,6 +89,15 @@ function mymetatags_menu() {
     'file' => 'mymetatags.pages.inc',
   );
 
+  $items['admin/config/search/mymetatags/%mymetatags_map/delete'] = array(
+    'title' => 'Delete',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mymetatags_exclude_form', 4),
+    'access arguments' => array('manage page metatags'),
+    'type' => MENU_CALLBACK,
+    'file' => 'mymetatags.pages.inc',
+  );
+
   return $items;
 
 }

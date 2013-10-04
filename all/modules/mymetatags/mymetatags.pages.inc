@@ -193,3 +193,32 @@ function mymetatags_set_metatags() {
 
   return system_settings_form($form);
 }
+
+/**
+ * Meta tags exclude form.
+ */
+function mymetatags_exclude_form($form, $form_state, $mymetatags) {
+  $form = array();
+  
+  // Store the meta tag map id and normal path to use upon submit.
+  $form['mtid'] = array(
+    '#type' => 'value',
+    '#value' => $mymetatags->mtid,
+  );
+  $form['normal_path'] = array(
+    '#type' => 'value',
+    '#value' => $mymetatags->normal_path,
+  );
+  
+  $confirm = t('Confirm remove meta tags from page %q?', array('%q' => $mymetatags->normal_path));
+  
+  return confirm_form($form, $confirm, 'admin/config/search/mymetatags');
+}
+
+function mymetatags_exclude_form_submit($form, $form_state) {
+
+  //db_delete('mymetatags')->condition('mtid', $form_state['values']['mtid'])->execute();
+  drupal_set_message(t('The meta tag was deleted'));
+  drupal_goto('admin/config/search/mymetatags');
+
+}
