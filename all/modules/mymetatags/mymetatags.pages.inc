@@ -198,16 +198,11 @@ function mymetatags_set_metatags() {
  * Meta tags exclude form.
  */
 function mymetatags_exclude_form($form, $form_state, $mymetatags) {
-  $form = array();
   
-  // Store the meta tag map id and normal path to use upon submit.
+  $form = array();
   $form['mtid'] = array(
     '#type' => 'value',
     '#value' => $mymetatags->mtid,
-  );
-  $form['normal_path'] = array(
-    '#type' => 'value',
-    '#value' => $mymetatags->normal_path,
   );
   
   $confirm = t('Confirm remove meta tags from page %q?', array('%q' => $mymetatags->normal_path));
