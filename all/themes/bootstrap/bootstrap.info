@@ -1,0 +1,14 @@
+name = Bootstrap
+core = 7.x
+engine = phptemplate
+
+stylesheets[all][] = css/bootstrap.css
+stylesheets[all][] = css/bootstrap-responsive.css
+
+#scripts[] = js/script.js
+
+regions[head] = Header
+regions[sidebar_a] = Sidebar a
+regions[content] = Content
+regions[sidebar_b] = Sidebar b
+regions[footer] = Footer
