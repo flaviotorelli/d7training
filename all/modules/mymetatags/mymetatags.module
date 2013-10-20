@@ -334,6 +334,7 @@ function mymetatags_insert_form() {
     $form['meta_tag_'. $key] = array(
       '#type' => 'textfield',
       '#title' => $key,
+      '#required' => TRUE,
       '#default_value' => (!empty($data[$key]))?$data[$key]:'',
       '#description' => (empty($data[$key]))?'Insert '.$key:'Update '.$key 
     );
@@ -365,6 +366,8 @@ function mymetatags_insert_form() {
 }
 
 function mymetatags_ajax_test($form, $form_state) {
+
+  //form_set_error('meta_tag_description', 'test');
 
   $normal_path = $form_state['values']['normal_path'];
 

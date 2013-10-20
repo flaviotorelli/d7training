@@ -1,6 +1,9 @@
 <div class="row show-grid">
   <div class="span9" data-original-title="" title="">
     <?php print render($page['head']) ?>
+    <div class="breadcrumb">
+      <?php print render($breadcrumb); ?>
+    </div>
   </div>
 </div>
 <div class="row show-grid">
