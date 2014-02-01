@@ -1,0 +1,14 @@
+<?php
+
+
+function mymetatags_sub_mymetatags_map() {
+
+  return array(
+    'testimonial-one' => array(
+      'keywords' => 'testimonial one',
+      'description' => 'The testimonial one',
+    ),
+
+  );
+
+}

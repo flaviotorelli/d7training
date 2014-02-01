@@ -1,0 +1,428 @@
+<?php
+
+/**
+ * @file
+ * Defines common base features for custom meta tags.
+ */
+
+/**
+ * Implements hook_load().
+ */
+function mymetatags_map_load($id) {
+
+  $sql = db_select('mymetatags', 'm')->fields('m')->condition('mtid', $id)->execute()->fetchObject();
+  return $sql;
+
+}
+
+/**
+ * Implements hook_init().
+ */
+function mymetatags_init() {
+  //return 'test';
+}
+
+
+/**
+ * Implements hook_permission().
+ */
+function mymetatags_permission() {
+  return array(
+    'manage page meta tags' => array(
+      'title' => t('Manage page meta tags'),
+      'description' => t('Manage page meta tags. Drupal training.'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_permission().
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function mymetatags_menu() {
+
+  $items = array();
+
+  $file_pages_src = 'mymetatags.pages.inc';
+  
+  $items['admin/config/search/mymetatags'] = array(
+    'file' => $file_pages_src,
+    'title' => 'Meta tags',
+    'description' => 'Meta tags drupal training',
+    'page callback' => 'mymetatags_list', 
+    //'page callback' => '_mymetatags_out',
+    'access arguments' => array('manage page metatags'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+  $items['admin/config/search/mymetatags/list'] = array(
+    'title' => 'List meta tags',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+
+  $items['admin/config/search/mymetatags/update'] = array(
+    'title' => 'Update meta tags',
+    'page callback' => 'mymetatags_update', 
+    'access arguments' => array('manage page metatags'),
+    'type' => MENU_LOCAL_TASK,
+    'file' => $file_pages_src,
+  );
+
+  $items['admin/config/search/mymetatags/%mymetatags_map'] = array(
+    'title' => 'My Meta Tags',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mymetatags_update_form', 4),
+    'access arguments' => array('manage page metatags'),
+    'type' => MENU_CALLBACK,
+    'file' => $file_pages_src,
+  );
+
+  $items['admin/config/search/mymetatags/configure'] = array(
+    'title' => 'Set the meta tags available in your site',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mymetatags_set_metatags', 4),
+    'access arguments' => array('manage page metatags'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => $file_pages_src,
+  );
+
+  $items['admin/config/search/mymetatags/%mymetatags_map/delete'] = array(
+    'title' => 'Delete',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mymetatags_exclude_form', 4),
+    'access arguments' => array('manage page metatags'),
+    'type' => MENU_CALLBACK,
+    'file' => $file_pages_src,
+  );
+
+  return $items;
+
+}
+
+// just for testing porpose
+function _mymetatags_out() {
+  return '<p><strong>Hello, <em>meta tags</em> world!</strong></p>';
+}
+
+/**
+ * Implements hook_block_info().
+ */
+function mymetatags_block_info() {
+  $blocks['insert_metatags'] = array(
+    'info' => t('Meta tags insert form'),
+    'cache' => DRUPAL_NO_CACHE,
+  );
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function mymetatags_block_view($delta = '') {
+  $block = array();
+
+  switch ($delta) {
+    case 'insert_metatags':
+      module_load_include('inc', 'mymetatags', 'mymetatags.pages');
+      $block['content'] = drupal_get_form('mymetatags_insert_form');
+      break;
+  }
+
+  return $block;
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function mymetatags_form_alter(&$form, &$form_state, $form_id) {
+
+  switch ($form_id) {
+    case "mymetatags_set_metatags":
+      $form['#validate'][] = '_mymetatags_custom_config_validate';
+      array_unshift($form['#submit'], '_mymetatags_custom_config_submit');
+      break;
+  }
+
+}
+
+/**
+ * Custom validation for metatag config
+ */
+function _mymetatags_custom_config_validate($form, $form_state) {
+
+  $value = check_plain($form_state['values']['metatags_set']);
+
+  // how many lines has the user entered?
+  $lines = explode("\n", $value);
+
+  // the field was set as required, therefore I do not need to check if is empty
+  $x = 0;
+  foreach ($lines as $line) {
+    $x = $x + 1;
+    if ( !_mymetatags_correct_format($line) ) {
+      form_set_error('metatags_set', t("Please, check the line $x. You must split the key and description using a pipe."));
+      // ok, I do know if I have more than one line error, the system will display the error related to the first error found only
+      // In a real project I promess perform it better ;)
+    }
+  }
+
+}
+
+/**
+ * Checks if the user has entered the correct pattern to the metatag configuration
+ */ 
+function _mymetatags_correct_format($str) {
+  $key_value = explode("|", $str);
+  if (count($key_value) == 2) {
+    return TRUE;
+  }
+  return FALSE;
+}
+
+/**
+ * Custom submit for metatag config
+ */
+function _mymetatags_custom_config_submit($form, $form_state) {
+
+  //current metatags_list
+  $key_values = module_invoke_all('mymetatags_list');
+
+  // submitted values
+  $lines_entered = explode("\n", $form_state['values']['metatags_set']);
+  $key_values_submitted = array();
+  foreach ($lines_entered as $line_entered) {
+    $y = explode("|", $line_entered);
+    $key_values_submitted[$y[0]] = $y[1];
+  }
+
+  // does any key was deleted?
+  $excluded_keys = array();
+  foreach ($key_values as $key => $value) {
+    if (!array_key_exists($key, $key_values_submitted)) {
+      $excluded_keys[] = $key; 
+    }
+  }
+
+  // search for keys already stored in mymetatags
+  $metas = db_query("SELECT mtid, data FROM {mymetatags}");
+  $count_metas = $metas->rowCount();
+  
+  if ($count_metas > 0) {
+    foreach ($metas as $meta) {
+      $data = unserialize($meta->data);
+      foreach ($data as $key => $value) {
+        if (in_array($key, $excluded_keys)) {
+          unset($data[$key]);
+        }
+      }
+
+      db_update('mymetatags')->fields(array('data' => serialize($data)))->condition('mtid', $meta->mtid)->execute();
+
+    }
+  }
+
+}
+
+/**
+ * Implements hook_mymetatags_list().
+ */
+function mymetatags_mymetatags_list() {
+
+  $metatags_set = explode("\n", variable_get('metatags_set'));
+  $keys = array();
+
+  if (count($metatags_set) > 0) {
+    foreach ($metatags_set as $meta) {
+      $m = explode('|', $meta);
+      $keys[$m[0]] = t($m[1]);
+    }
+  
+    return $keys;
+  }
+
+  return;
+
+}
+
+/**
+ * Implements hook_preprocess_html().
+ * Display the meta tag
+ */
+function mymetatags_preprocess_html($variables) {
+
+  $q = drupal_get_normal_path($_GET['q']);
+
+  $metatags = db_query("SELECT data, normal_path FROM {mymetatags} WHERE normal_path = :q", 
+    array(':q' => $q));
+
+  $count = $metatags->rowCount();
+
+  if ($count > 0) {
+
+    foreach ($metatags as $key => $value) {
+      $metas = unserialize($value->data);
+    }
+
+    foreach ($metas as $key => $value) {
+      drupal_add_html_head(array(
+        '#type' => 'html_tag',
+        '#tag' => 'meta',
+        '#attributes' => array(
+          'name' => $key,
+          'content' =>  $value,
+        ),
+      ), uniqid());
+    }
+
+  }
+  
+}
+
+/**
+ * Implements hook_mymetatags_map().
+ */
+function mymetatags_mymetatags_map() {
+
+  return array(
+    'product-one' => array(
+      'keywords' => 'a, b, c',
+      'description' => 'Abc abc abc',
+    ),
+    'product-two' => array(
+      'keywords' => 'm, n, o',
+      'description' => 'Mno Mno Mno'
+    ),
+    'product-three' => array(
+      'keywords' => 'a, s, d, f, g',
+      'description' => 'Asdfg asdfg'
+    ),
+    'contact-us' => array(
+      'keywords' => 'contact',
+      'description' => 'Contact us'
+    ),
+  );
+}
+
+
+/**
+ * Meta tags insert form (block).
+ * Ajax form
+ */
+
+function mymetatags_insert_form() {
+
+  $form = array();
+  $form['ajax'] = array(
+    '#markup' => '<div id="ajax"></div>',
+  );
+
+  $q = check_plain($_GET['q']);
+
+  // available meta tags
+  $available_metatags = module_invoke_all('mymetatags_list');
+
+  // checking if there is any metata for the current page
+  $get_metatags = db_query("SELECT data FROM {mymetatags} WHERE normal_path = :normal_path LIMIT 1",
+    array(':normal_path' => $q))->fetchField();
+
+  $data = unserialize($get_metatags);
+
+  foreach ($available_metatags as $key => $value) {
+    $form['meta_tag_'. $key] = array(
+      '#type' => 'textfield',
+      '#title' => $key,
+      '#required' => TRUE,
+      '#default_value' => (!empty($data[$key]))?$data[$key]:'',
+      '#description' => (empty($data[$key]))?'Insert '.$key:'Update '.$key 
+    );
+     $validate_keys[] = $key;
+  }
+
+  $form['validate_keys'] = array(
+    '#type' => 'value',
+    '#value' => implode('#', $validate_keys)
+  );
+
+  $form['normal_path'] = array(
+    '#type' => 'value',
+    '#value' => $q
+  );
+
+  $form['update_button'] = array(
+    '#type' => 'submit',
+    '#value' => t('Save'),
+    '#ajax' => array(
+      'callback' => 'mymetatags_ajax_test',
+      'wrapper' => 'ajax',
+      'effect' => 'fade',
+      )
+  );
+
+  return $form;
+
+}
+
+function mymetatags_ajax_test($form, $form_state) {
+
+  //form_set_error('meta_tag_description', 'test');
+
+  $normal_path = $form_state['values']['normal_path'];
+
+  // checks if the node has some metatag set
+  $metatags = db_query("SELECT mtid FROM {mymetatags} WHERE normal_path = :normal_path",
+    array(':normal_path' => $normal_path));
+  $count = $metatags->rowCount();
+
+  // checking the fields that must be validated
+  $validate_fields = explode('#', $form_state['values']['validate_keys']);
+  $update_fields = array();
+  $data = array();
+
+  foreach ($validate_fields as $validate_field) {
+
+    if (check_plain($form_state['values']['meta_tag_'. $validate_field]) != '') {
+      $update_fields[] = $form_state['values']['meta_tag_'.$validate_field];
+      $data[$validate_field] = $form_state['values']['meta_tag_'.$validate_field];
+    }
+
+  }
+
+  // insert metatags in case of the node has no one set
+  if ($count == 0 && count($data) > 0) {
+    // insert a new one
+    db_insert('mymetatags')
+      ->fields(array(
+          'normal_path' => $normal_path,
+          'data' => serialize($data),
+        ))
+        ->execute();
+
+      return t('The metatags has been set');
+  }
+
+  // remove the register if all fields are empty
+  if (count($update_fields) == 0) {
+    // remove register
+    db_delete('mymetatags')
+          ->condition('normal_path', $form_state['values']['normal_path'])
+          ->execute();
+
+      return t('Meta tags deleted');
+   }
+  else {
+
+    db_update('mymetatags')
+      ->fields(array('data' => serialize($data)))
+      ->condition('normal_path', $form_state['values']['normal_path'])
+      ->execute();
+
+      return t('Meta tags updated');
+
+  }
+
+
+}
+
